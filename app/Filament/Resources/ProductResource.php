@@ -4,10 +4,14 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Filament\Resources\ProductResource\RelationManagers\LendsRelationManager;
+use App\Filament\Resources\ProductResource\RelationManagers\PurchasesRelationManager;
+use App\Filament\Resources\ProductResource\RelationManagers\SalesRelationManager;
 use App\Models\Product;
 use Filament\Forms;
 use Filament\Forms\Components\Tabs\Tab;
 use Filament\Forms\Form;
+use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -20,6 +24,8 @@ class ProductResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+
+
     public static function form(Form $form): Form
     {
         return $form
@@ -27,9 +33,9 @@ class ProductResource extends Resource
                 Forms\Components\TextInput::make('name'),
                 Forms\Components\KeyValue::make("specifications")
                 ->addActionLabel('Add More Spec')
-                ->keyLabel('Property name')
+                ->keyLabel('spec')
                 ->keyPlaceholder('Processor')
-                ->valueLabel('Property value')
+                ->valueLabel('value')
                 ->valuePlaceholder('core i7 9th generation')
                 ->reorderable()
             ])
@@ -40,9 +46,19 @@ class ProductResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make("name"),
-                Tables\Columns\TextColumn::make('specifications')
-                ->badge()
+                Tables\Columns\TextColumn::make("name")
+                ->formatStateUsing(function(string $state,Product $record): string {
+                    $array = $record->specifications;
+                    $result = [];
+            
+                    foreach ($array as $key => $value) {
+                        $result[] = $value;
+                    }
+            
+                    $output = implode(" x ", $result);
+            
+                    return $state." ".$output;
+                }),
             ])
             ->filters([
                 //
@@ -60,7 +76,9 @@ class ProductResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            PurchasesRelationManager::class,
+            SalesRelationManager::class,
+            LendsRelationManager::class
         ];
     }
     
